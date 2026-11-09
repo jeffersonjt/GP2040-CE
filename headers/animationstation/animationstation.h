@@ -14,6 +14,7 @@
 #include "effects/customtheme.h"
 #include "effects/customthemepressed.h"
 #include "effects/rainbow.h"
+#include "effects/ripple.h"
 #include "effects/staticcolor.h"
 #include "effects/statictheme.h"
 
@@ -36,6 +37,7 @@ public:
     void ClearPressed();
     void SetMode(uint8_t mode);
     void SetMatrix(PixelMatrix matrix);
+    void SetRippleCoordinates(const std::map<uint32_t, RipplePoint> &coordinates);
     void ConfigureBrightness(uint8_t max, uint8_t steps);
     float GetBrightnessX();
     float GetLinkageModeOfBrightnessX();
@@ -72,6 +74,8 @@ private:
     uint8_t brightnessSteps;
     float brightnessX;
     PixelMatrix matrix;
+    Ripple ripple;
+    RGB RippleColor();
 };
 
 #endif

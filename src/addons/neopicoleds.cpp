@@ -260,6 +260,29 @@ void NeoPicoLEDAddon::setup() {
     const AnimationOptions & animationOptions = Storage::getInstance().getAnimationOptions();
     as.ConfigureBrightness(ledOptions.brightnessMaximum, ledOptions.brightnessSteps);
 	as.SetMatrix(matrix);
+
+	// Physical button positions for the ripple overlay, taken from the layout
+	// diagram in the stick's manual (page 2). Units are roughly one button
+	// width; only relative distances matter.
+	auto at = [](float diagramX, float diagramY) {
+		return RipplePoint{ diagramX / 65.0f, diagramY / 65.0f };
+	};
+	as.SetRippleCoordinates({
+		{ GAMEPAD_MASK_DL, at(142, 1425) }, // PIN5  Left
+		{ GAMEPAD_MASK_DD, at(205, 1425) }, // PIN3  Down
+		{ GAMEPAD_MASK_DR, at(260, 1465) }, // PIN4  Right
+		{ GAMEPAD_MASK_DU, at(293, 1585) }, // PIN2  Up (thumb)
+		{ GAMEPAD_MASK_L3, at(366, 1375) }, // PIN18 LS
+		{ GAMEPAD_MASK_B3, at(366, 1440) }, // PIN10 X  light punch
+		{ GAMEPAD_MASK_B1, at(362, 1505) }, // PIN6  A  light kick
+		{ GAMEPAD_MASK_R3, at(366, 1585) }, // PIN19 RS
+		{ GAMEPAD_MASK_B4, at(425, 1405) }, // PIN11 Y  medium punch
+		{ GAMEPAD_MASK_B2, at(427, 1470) }, // PIN7  B  medium kick
+		{ GAMEPAD_MASK_R1, at(490, 1395) }, // PIN12 RB heavy punch
+		{ GAMEPAD_MASK_R2, at(493, 1465) }, // PIN8  RT heavy kick
+		{ GAMEPAD_MASK_L1, at(558, 1400) }, // PIN13 LB drive parry
+		{ GAMEPAD_MASK_L2, at(558, 1470) }, // PIN9  LT drive impact
+	});
     as.SetMode(animationOptions.baseAnimationIndex);
 	as.SetBrightness(animationOptions.brightness);
 

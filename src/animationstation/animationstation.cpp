@@ -116,6 +116,7 @@ uint16_t AnimationStation::AdjustIndex(int changeSize) {
 
 void AnimationStation::HandlePressed(std::vector<Pixel> pressed) {
   this->lastPressed = pressed;
+  this->ripple.UpdatePressed(pressed, RippleColor());
   this->baseAnimation->UpdatePixels(pressed);  
   this->buttonAnimation->UpdatePixels(pressed);
 }
@@ -129,6 +130,7 @@ void AnimationStation::ClearPressed() {
   }
 
   this->lastPressed.clear();
+  this->ripple.UpdatePressed(this->lastPressed, RippleColor());
 }
 
 void AnimationStation::Animate() {
@@ -146,6 +148,20 @@ void AnimationStation::Animate() {
   }
 
   buttonAnimation->Animate(this->frame);
+  ripple.Apply(this->frame, this->matrix);
+}
+
+void AnimationStation::SetRippleCoordinates(const std::map<uint32_t, RipplePoint> &coordinates) {
+  this->ripple.SetCoordinates(coordinates);
+}
+
+// Ripples use the pressed colour, so the existing "pressed colour" hotkey and
+// web setting change them too. Black would make them invisible, so use white.
+RGB AnimationStation::RippleColor() {
+  uint8_t index = Storage::getInstance().getAnimationOptions().buttonColorIndex;
+  if (index >= colors.size() || index == 0)
+    return ColorWhite;
+  return colors[index];
 }
 
 void AnimationStation::Clear() {

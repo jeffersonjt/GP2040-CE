@@ -243,6 +243,7 @@ src/animationstation/effects/chase.cpp
 src/animationstation/effects/customtheme.cpp
 src/animationstation/effects/customthemepressed.cpp
 src/animationstation/effects/rainbow.cpp
+src/animationstation/effects/ripple.cpp
 src/animationstation/effects/staticcolor.cpp
 src/animationstation/effects/statictheme.cpp
 ${PROTO_OUTPUT_DIR}/enums.pb.c
@@ -321,7 +322,7 @@ install(FILES
     DESTINATION .
 )
 
-if (NOT (DEFINED ENV(CI)) AND (EXISTS ${CMAKE_SOURCE_DIR}/modules/Custom.cmake))
+if (NOT (DEFINED ENV{CI}) AND (EXISTS ${CMAKE_SOURCE_DIR}/modules/Custom.cmake))
   message(STATUS "Found custom script.")
 	include(${CMAKE_SOURCE_DIR}/modules/Custom.cmake)
 endif()
