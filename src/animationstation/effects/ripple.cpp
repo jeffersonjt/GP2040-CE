@@ -2,33 +2,31 @@
 
 #include <math.h>
 
-void Ripple::SetCoordinates(const std::map<uint32_t, RipplePoint> &coordinates) {
-  this->coordinates = coordinates;
+void Ripple::SetLayout(const std::map<uint8_t, RipplePoint> &pinPositions,
+                       const std::map<uint32_t, uint8_t> &maskToPin) {
+  this->pinPositions = pinPositions;
+  this->maskToPin = maskToPin;
   this->waves.clear();
-  this->held.clear();
+  this->heldPins = 0;
 }
 
-void Ripple::UpdatePressed(const std::vector<Pixel> &pressed, RGB color) {
-  std::set<uint32_t> nowHeld;
+void Ripple::UpdatePressed(uint32_t pressedPins, RGB color) {
+  // Only a fresh press starts a ripple, not holding the button down.
+  uint32_t newPresses = pressedPins & ~heldPins;
+  heldPins = pressedPins;
 
-  for (const Pixel &pixel : pressed) {
-    nowHeld.insert(pixel.mask);
+  if (newPresses == 0)
+    return;
 
-    // Only a fresh press starts a ripple, not holding the button down.
-    if (held.count(pixel.mask))
-      continue;
-
-    auto position = coordinates.find(pixel.mask);
-    if (position == coordinates.end())
+  for (auto &entry : pinPositions) {
+    if (!(newPresses & (1UL << entry.first)))
       continue;
 
     if (waves.size() >= MAX_WAVES)
       waves.erase(waves.begin()); // drop the oldest
 
-    waves.push_back({ position->second, get_absolute_time(), color });
+    waves.push_back({ entry.second, get_absolute_time(), color });
   }
-
-  held = nowHeld;
 }
 
 static inline uint8_t addChannel(uint8_t base, float add) {
@@ -56,8 +54,11 @@ void Ripple::Apply(RGB (&frame)[100], PixelMatrix &matrix) {
       if (pixel.index == NO_PIXEL.index || pixel.positions.empty())
         continue;
 
-      auto position = coordinates.find(pixel.mask);
-      if (position == coordinates.end())
+      auto pin = maskToPin.find(pixel.mask);
+      if (pin == maskToPin.end())
+        continue;
+      auto position = pinPositions.find(pin->second);
+      if (position == pinPositions.end())
         continue;
 
       float addR = 0, addG = 0, addB = 0;

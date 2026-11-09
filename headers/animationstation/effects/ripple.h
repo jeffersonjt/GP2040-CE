@@ -2,7 +2,6 @@
 #define _RIPPLE_H_
 
 #include <map>
-#include <set>
 #include <vector>
 #include "pico/stdlib.h"
 #include "animation.h"
@@ -14,8 +13,8 @@
  * animation is active, so the normal press colour and fade ("afterglow")
  * keep working underneath it.
  *
- * Every new button press spawns a ring that expands outward from that
- * button's physical position and lights each button it passes over.
+ * Works on physical buttons (GPIO pins), not on mapped functions, so a
+ * ripple always starts under the finger regardless of the active profile.
  */
 
 struct RipplePoint {
@@ -25,13 +24,14 @@ struct RipplePoint {
 
 class Ripple {
 public:
-  // Physical position of each button, keyed by its gamepad mask.
-  // Buttons without a position never start a ripple and are never lit by one.
-  void SetCoordinates(const std::map<uint32_t, RipplePoint> &coordinates);
+  // pinPositions: physical position of each button, by GPIO pin.
+  // maskToPin:    which pin each LED's button sits on, by the LED's button mask.
+  void SetLayout(const std::map<uint8_t, RipplePoint> &pinPositions,
+                 const std::map<uint32_t, uint8_t> &maskToPin);
 
-  // Called every frame with the buttons currently held. Spawns a ripple for
-  // each button that was not held on the previous frame.
-  void UpdatePressed(const std::vector<Pixel> &pressed, RGB color);
+  // Called every frame with the currently held pins (bit n = GPIO n).
+  // Spawns a ripple for each pin that was not held on the previous frame.
+  void UpdatePressed(uint32_t pressedPins, RGB color);
 
   // Adds the active ripples onto the frame.
   void Apply(RGB (&frame)[100], PixelMatrix &matrix);
@@ -50,8 +50,9 @@ private:
   static constexpr float RING_WIDTH = 1.1f;      // how thick the ring is
   static constexpr float LIFETIME_MS = 650.0f;   // ring fades out completely by then
 
-  std::map<uint32_t, RipplePoint> coordinates;
-  std::set<uint32_t> held;
+  std::map<uint8_t, RipplePoint> pinPositions;
+  std::map<uint32_t, uint8_t> maskToPin;
+  uint32_t heldPins = 0;
   std::vector<Wave> waves;
 };
 

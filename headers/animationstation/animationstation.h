@@ -37,7 +37,9 @@ public:
     void ClearPressed();
     void SetMode(uint8_t mode);
     void SetMatrix(PixelMatrix matrix);
-    void SetRippleCoordinates(const std::map<uint32_t, RipplePoint> &coordinates);
+    void SetRippleLayout(const std::map<uint8_t, RipplePoint> &pinPositions,
+                         const std::map<uint32_t, uint8_t> &maskToPin);
+    void HandlePressedPins(uint32_t pressedPins);
     void ConfigureBrightness(uint8_t max, uint8_t steps);
     float GetBrightnessX();
     float GetLinkageModeOfBrightnessX();

@@ -116,7 +116,6 @@ uint16_t AnimationStation::AdjustIndex(int changeSize) {
 
 void AnimationStation::HandlePressed(std::vector<Pixel> pressed) {
   this->lastPressed = pressed;
-  this->ripple.UpdatePressed(pressed, RippleColor());
   this->baseAnimation->UpdatePixels(pressed);  
   this->buttonAnimation->UpdatePixels(pressed);
 }
@@ -130,7 +129,6 @@ void AnimationStation::ClearPressed() {
   }
 
   this->lastPressed.clear();
-  this->ripple.UpdatePressed(this->lastPressed, RippleColor());
 }
 
 void AnimationStation::Animate() {
@@ -151,8 +149,13 @@ void AnimationStation::Animate() {
   ripple.Apply(this->frame, this->matrix);
 }
 
-void AnimationStation::SetRippleCoordinates(const std::map<uint32_t, RipplePoint> &coordinates) {
-  this->ripple.SetCoordinates(coordinates);
+void AnimationStation::SetRippleLayout(const std::map<uint8_t, RipplePoint> &pinPositions,
+                                       const std::map<uint32_t, uint8_t> &maskToPin) {
+  this->ripple.SetLayout(pinPositions, maskToPin);
+}
+
+void AnimationStation::HandlePressedPins(uint32_t pressedPins) {
+  this->ripple.UpdatePressed(pressedPins, RippleColor());
 }
 
 // Ripples use the pressed colour, so the existing "pressed colour" hotkey and

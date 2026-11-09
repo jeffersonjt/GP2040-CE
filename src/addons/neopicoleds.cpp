@@ -215,6 +215,52 @@ bool NeoPicoLEDAddon::available() {
     return isValidPin(ledOptions.dataPin);
 }
 
+/*
+ * Factory wiring of this stick (manual page 2): which GPIO pin sits under each
+ * button LED. The LED order on the stick follows these factory functions, so
+ * this ties every LED to its physical button.
+ */
+static std::map<uint32_t, uint8_t> ledButtonPins()
+{
+	return {
+		{ GAMEPAD_MASK_DL, 5 },  { GAMEPAD_MASK_DD, 3 },  { GAMEPAD_MASK_DR, 4 },
+		{ GAMEPAD_MASK_DU, 2 },  // thumb Up (the LED chain ends next to RS)
+		{ GAMEPAD_MASK_B1, 6 },  { GAMEPAD_MASK_B2, 7 },  { GAMEPAD_MASK_B3, 10 },
+		{ GAMEPAD_MASK_B4, 11 }, { GAMEPAD_MASK_R1, 12 }, { GAMEPAD_MASK_L1, 13 },
+		{ GAMEPAD_MASK_R2, 8 },  { GAMEPAD_MASK_L2, 9 },
+		{ GAMEPAD_MASK_L3, 18 }, { GAMEPAD_MASK_R3, 19 },
+		{ GAMEPAD_MASK_A1, 20 },
+	};
+}
+
+/*
+ * Physical position of each face button, from the layout diagram in the
+ * manual. Units are roughly one button width; only relative distances matter.
+ */
+static std::map<uint8_t, RipplePoint> physicalPinPositions()
+{
+	auto at = [](float diagramX, float diagramY) {
+		return RipplePoint{ diagramX / 65.0f, diagramY / 65.0f };
+	};
+	return {
+		{ 5,  at(142, 1425) }, // Left
+		{ 3,  at(205, 1425) }, // Down
+		{ 4,  at(260, 1465) }, // Right
+		{ 22, at(213, 1365) }, // Up (top)
+		{ 2,  at(293, 1585) }, // Up (thumb)
+		{ 18, at(366, 1375) }, // column top    (factory LS)
+		{ 10, at(366, 1440) }, // column        (factory X)
+		{ 6,  at(362, 1505) }, // column        (factory A)
+		{ 19, at(366, 1585) }, // column bottom (factory RS)
+		{ 11, at(425, 1405) }, // top row 1     (factory Y)
+		{ 12, at(490, 1395) }, // top row 2     (factory RB)
+		{ 13, at(558, 1400) }, // top row 3     (factory LB)
+		{ 7,  at(427, 1470) }, // bottom row 1  (factory B)
+		{ 8,  at(493, 1465) }, // bottom row 2  (factory RT)
+		{ 9,  at(558, 1470) }, // bottom row 3  (factory LT)
+	};
+}
+
 void NeoPicoLEDAddon::setup() {
     // Set Default LED Options
     const LEDOptions& ledOptions = Storage::getInstance().getLedOptions();
@@ -261,28 +307,7 @@ void NeoPicoLEDAddon::setup() {
     as.ConfigureBrightness(ledOptions.brightnessMaximum, ledOptions.brightnessSteps);
 	as.SetMatrix(matrix);
 
-	// Physical button positions for the ripple overlay, taken from the layout
-	// diagram in the stick's manual (page 2). Units are roughly one button
-	// width; only relative distances matter.
-	auto at = [](float diagramX, float diagramY) {
-		return RipplePoint{ diagramX / 65.0f, diagramY / 65.0f };
-	};
-	as.SetRippleCoordinates({
-		{ GAMEPAD_MASK_DL, at(142, 1425) }, // PIN5  Left
-		{ GAMEPAD_MASK_DD, at(205, 1425) }, // PIN3  Down
-		{ GAMEPAD_MASK_DR, at(260, 1465) }, // PIN4  Right
-		{ GAMEPAD_MASK_DU, at(293, 1585) }, // PIN2  Up (thumb)
-		{ GAMEPAD_MASK_L3, at(366, 1375) }, // PIN18 LS
-		{ GAMEPAD_MASK_B3, at(366, 1440) }, // PIN10 X  light punch
-		{ GAMEPAD_MASK_B1, at(362, 1505) }, // PIN6  A  light kick
-		{ GAMEPAD_MASK_R3, at(366, 1585) }, // PIN19 RS
-		{ GAMEPAD_MASK_B4, at(425, 1405) }, // PIN11 Y  medium punch
-		{ GAMEPAD_MASK_B2, at(427, 1470) }, // PIN7  B  medium kick
-		{ GAMEPAD_MASK_R1, at(490, 1395) }, // PIN12 RB heavy punch
-		{ GAMEPAD_MASK_R2, at(493, 1465) }, // PIN8  RT heavy kick
-		{ GAMEPAD_MASK_L1, at(558, 1400) }, // PIN13 LB drive parry
-		{ GAMEPAD_MASK_L2, at(558, 1470) }, // PIN9  LT drive impact
-	});
+	as.SetRippleLayout(physicalPinPositions(), ledButtonPins());
     as.SetMode(animationOptions.baseAnimationIndex);
 	as.SetBrightness(animationOptions.brightness);
 
@@ -537,15 +562,26 @@ void NeoPicoLEDAddon::process() {
     }
 
     uint32_t buttonState = gamepad->state.dpad << 16 | gamepad->state.buttons;
+
+    // Light the LED under the physical button that is pressed, not the LED of
+    // whichever function it is mapped to, so remapped profiles still light
+    // up under the finger. Buttons without a known pin use the mapped state.
+    uint32_t pressedPins = Storage::getInstance().GetGamepad()->debouncedGpio;
+    static const std::map<uint32_t, uint8_t> ledPins = ledButtonPins();
     vector<Pixel> pressed;
     for (auto row : matrix.pixels)
     {
         for (auto pixel : row)
         {
-            if (buttonState & pixel.mask)
+            auto pin = ledPins.find(pixel.mask);
+            bool down = (pin != ledPins.end())
+                ? (pressedPins & (1UL << pin->second)) != 0
+                : (buttonState & pixel.mask) != 0;
+            if (down)
                 pressed.push_back(pixel);
         }
     }
+    as.HandlePressedPins(pressedPins);
     if (pressed.size() > 0)
         as.HandlePressed(pressed);
     else
