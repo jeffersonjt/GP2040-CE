@@ -54,9 +54,6 @@ jobs:
       run : cat /proc/cpuinfo  | grep processor | wc -l
       #End Global Setup
 
-    - name: Install pkg_resources for the protobuf generator
-      run: python3 -m pip install "setuptools<70"
-
     - name: Pico Build Configure CMake
       shell: bash
       if: ${{ matrix.GP2040_BOARDCONFIG != 'PicoW'}}
