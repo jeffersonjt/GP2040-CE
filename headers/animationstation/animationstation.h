@@ -47,6 +47,12 @@ public:
     static bool StyleUsesRipple();
     static bool StyleIsDark();
     void NextPressStyle();
+
+    // The custom theme's normal colour for each button (by mask). Flashes,
+    // afterglow and ripples all use these, so effects match the board.
+    static std::map<uint32_t, RGB> ThemeColors();
+    // Brightness the theme rests at in non-dark styles, so presses stand out.
+    static constexpr float THEME_REST_LEVEL = 0.3f;
     void ConfigureBrightness(uint8_t max, uint8_t steps);
     float GetBrightnessX();
     float GetLinkageModeOfBrightnessX();

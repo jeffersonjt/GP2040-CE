@@ -9,6 +9,7 @@
 #include "animationstorage.h"
 
 #include "storagemanager.h"
+#include "GamepadState.h"
 
 AnimationStation::AnimationStation() {
     brightnessMax = 100;
@@ -164,6 +165,23 @@ void AnimationStation::HandlePressedPins(uint32_t pressedPins) {
   this->ripple.UpdatePressed(pressedPins, RippleColor());
 }
 
+std::map<uint32_t, RGB> AnimationStation::ThemeColors() {
+  AnimationOptions & o = Storage::getInstance().getAnimationOptions();
+  if (!o.hasCustomTheme)
+    return {};
+  return {
+    { GAMEPAD_MASK_DU, RGB(o.customThemeUp) },    { GAMEPAD_MASK_DD, RGB(o.customThemeDown) },
+    { GAMEPAD_MASK_DL, RGB(o.customThemeLeft) },  { GAMEPAD_MASK_DR, RGB(o.customThemeRight) },
+    { GAMEPAD_MASK_B1, RGB(o.customThemeB1) },    { GAMEPAD_MASK_B2, RGB(o.customThemeB2) },
+    { GAMEPAD_MASK_B3, RGB(o.customThemeB3) },    { GAMEPAD_MASK_B4, RGB(o.customThemeB4) },
+    { GAMEPAD_MASK_L1, RGB(o.customThemeL1) },    { GAMEPAD_MASK_R1, RGB(o.customThemeR1) },
+    { GAMEPAD_MASK_L2, RGB(o.customThemeL2) },    { GAMEPAD_MASK_R2, RGB(o.customThemeR2) },
+    { GAMEPAD_MASK_S1, RGB(o.customThemeS1) },    { GAMEPAD_MASK_S2, RGB(o.customThemeS2) },
+    { GAMEPAD_MASK_A1, RGB(o.customThemeA1) },    { GAMEPAD_MASK_A2, RGB(o.customThemeA2) },
+    { GAMEPAD_MASK_L3, RGB(o.customThemeL3) },    { GAMEPAD_MASK_R3, RGB(o.customThemeR3) },
+  };
+}
+
 bool AnimationStation::StyleUsesRipple() {
   return (Storage::getInstance().getAnimationOptions().ledPressStyle & 1) != 0;
 }
@@ -217,6 +235,7 @@ uint8_t AnimationStation::GetBrightness() {
 }
 
 void AnimationStation::SetMode(uint8_t mode) {
+  this->ripple.SetPixelColors(ThemeColors());
   AnimationOptions & animationOptions = Storage::getInstance().getAnimationOptions();
   animationOptions.baseAnimationIndex = mode;
   AnimationEffects newEffect =

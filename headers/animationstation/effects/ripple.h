@@ -29,6 +29,10 @@ public:
   void SetLayout(const std::map<uint8_t, RipplePoint> &pinPositions,
                  const std::map<uint32_t, uint8_t> &maskToPin);
 
+  // Colour each LED lights in as a ring passes over it (by button mask).
+  // LEDs without a colour use the colour of the wave instead.
+  void SetPixelColors(const std::map<uint32_t, RGB> &colors);
+
   // Called every frame with the currently held pins (bit n = GPIO n).
   // Spawns a ripple for each pin that was not held on the previous frame.
   void UpdatePressed(uint32_t pressedPins, RGB color);
@@ -52,6 +56,7 @@ private:
 
   std::map<uint8_t, RipplePoint> pinPositions;
   std::map<uint32_t, uint8_t> maskToPin;
+  std::map<uint32_t, RGB> pixelColors;
   uint32_t heldPins = 0;
   std::vector<Wave> waves;
 };

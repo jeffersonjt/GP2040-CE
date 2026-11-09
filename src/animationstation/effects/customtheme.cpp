@@ -27,6 +27,11 @@ CustomTheme::CustomTheme(PixelMatrix &matrix) : Animation(matrix) {
 	}
 }
 
+static RGB Dim(const RGB &color) {
+  const float level = AnimationStation::THEME_REST_LEVEL;
+  return RGB(color.r * level, color.g * level, color.b * level);
+}
+
 bool CustomTheme::Animate(RGB (&frame)[100]) {
   UpdateTime();
   UpdatePresses(frame);
@@ -46,7 +51,7 @@ bool CustomTheme::Animate(RGB (&frame)[100]) {
       if (itr != theme.end()) {
         for (size_t p = 0; p != matrix->pixels[r][c].positions.size(); p++) {
           // Interpolate from hitColor (color the button was assigned when pressed) back to the theme color
-          frame[matrix->pixels[r][c].positions[p]] = BlendColor(hitColor[matrix->pixels[r][c].index], dark ? ColorBlack : itr->second, times[matrix->pixels[r][c].index]);
+          frame[matrix->pixels[r][c].positions[p]] = BlendColor(hitColor[matrix->pixels[r][c].index], dark ? ColorBlack : Dim(itr->second), times[matrix->pixels[r][c].index]);
         }
       } else {
         for (size_t p = 0; p != matrix->pixels[r][c].positions.size(); p++) {

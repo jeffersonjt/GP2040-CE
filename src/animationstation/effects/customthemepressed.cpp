@@ -1,6 +1,7 @@
 #include "customthemepressed.h"
 #include "GamepadState.h"
 #include "storagemanager.h"
+#include "animationstation.h"
 
 CustomThemePressed::CustomThemePressed(PixelMatrix &matrix) : Animation(matrix) {
   this->filtered = true;
@@ -57,13 +58,16 @@ CustomThemePressed::CustomThemePressed(PixelMatrix &matrix, std::vector<Pixel> &
 }
 
 bool CustomThemePressed::Animate(RGB (&frame)[100]) {
+  // Presses light in the button's own (normal) theme colour at full brightness,
+  // so flashes, afterglow and ripples all match the board's colours.
+  static const std::map<uint32_t, RGB> own = AnimationStation::ThemeColors();
   for (size_t r = 0; r != matrix->pixels.size(); r++) {
     for (size_t c = 0; c != matrix->pixels[r].size(); c++) {
       if (matrix->pixels[r][c].index == NO_PIXEL.index || this->notInFilter(matrix->pixels[r][c]))
         continue;
 
-      auto itr = theme.find(matrix->pixels[r][c].mask);
-      if (itr != theme.end())
+      auto itr = own.find(matrix->pixels[r][c].mask);
+      if (itr != own.end())
         for (size_t p = 0; p != matrix->pixels[r][c].positions.size(); p++)
           frame[matrix->pixels[r][c].positions[p]] = itr->second;
       else

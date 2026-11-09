@@ -10,6 +10,10 @@ void Ripple::SetLayout(const std::map<uint8_t, RipplePoint> &pinPositions,
   this->heldPins = 0;
 }
 
+void Ripple::SetPixelColors(const std::map<uint32_t, RGB> &colors) {
+  this->pixelColors = colors;
+}
+
 void Ripple::UpdatePressed(uint32_t pressedPins, RGB color) {
   // Only a fresh press starts a ripple, not holding the button down.
   uint32_t newPresses = pressedPins & ~heldPins;
@@ -61,6 +65,9 @@ void Ripple::Apply(RGB (&frame)[100], PixelMatrix &matrix) {
       if (position == pinPositions.end())
         continue;
 
+      auto own = pixelColors.find(pixel.mask);
+      const bool hasOwn = own != pixelColors.end();
+
       float addR = 0, addG = 0, addB = 0;
 
       for (const Wave &wave : waves) {
@@ -80,9 +87,10 @@ void Ripple::Apply(RGB (&frame)[100], PixelMatrix &matrix) {
         ring = ring * ring * (3.0f - 2.0f * ring);
         float strength = ring * (1.0f - age / LIFETIME_MS);
 
-        addR += wave.color.r * strength;
-        addG += wave.color.g * strength;
-        addB += wave.color.b * strength;
+        const RGB &color = hasOwn ? own->second : wave.color;
+        addR += color.r * strength;
+        addG += color.g * strength;
+        addB += color.b * strength;
       }
 
       if (addR == 0 && addG == 0 && addB == 0)
