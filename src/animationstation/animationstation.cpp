@@ -116,7 +116,12 @@ uint16_t AnimationStation::AdjustIndex(int changeSize) {
 
 void AnimationStation::HandlePressed(std::vector<Pixel> pressed) {
   this->lastPressed = pressed;
-  this->baseAnimation->UpdatePixels(pressed);  
+  if (StyleUsesRipple()) {
+    // Ripple styles: light the held button, but no afterglow fade on release.
+    this->baseAnimation->ClearPixels();
+  } else {
+    this->baseAnimation->UpdatePixels(pressed);
+  }
   this->buttonAnimation->UpdatePixels(pressed);
 }
 
@@ -146,7 +151,8 @@ void AnimationStation::Animate() {
   }
 
   buttonAnimation->Animate(this->frame);
-  ripple.Apply(this->frame, this->matrix);
+  if (StyleUsesRipple())
+    ripple.Apply(this->frame, this->matrix);
 }
 
 void AnimationStation::SetRippleLayout(const std::map<uint8_t, RipplePoint> &pinPositions,
@@ -156,6 +162,32 @@ void AnimationStation::SetRippleLayout(const std::map<uint8_t, RipplePoint> &pin
 
 void AnimationStation::HandlePressedPins(uint32_t pressedPins) {
   this->ripple.UpdatePressed(pressedPins, RippleColor());
+}
+
+bool AnimationStation::StyleUsesRipple() {
+  return (Storage::getInstance().getAnimationOptions().ledPressStyle & 1) != 0;
+}
+
+bool AnimationStation::StyleIsDark() {
+  return (Storage::getInstance().getAnimationOptions().ledPressStyle & 2) != 0;
+}
+
+void AnimationStation::NextPressStyle() {
+  if (!time_reached(nextChange))
+    return;
+  nextChange = make_timeout_time_ms(250);
+
+  AnimationOptions & animationOptions = Storage::getInstance().getAnimationOptions();
+  animationOptions.ledPressStyle = (animationOptions.ledPressStyle + 1) % PRESS_STYLE_COUNT;
+
+  // "Off when not pressed" is built on the custom theme (it keeps the theme's
+  // pressed colours), so switch to it when entering a dark style.
+  if (StyleIsDark() && animationOptions.hasCustomTheme &&
+      animationOptions.baseAnimationIndex != AnimationEffects::EFFECT_CUSTOM_THEME) {
+    SetMode(AnimationEffects::EFFECT_CUSTOM_THEME);
+  }
+
+  EventManager::getInstance().triggerEvent(new GPStorageSaveEvent(false));
 }
 
 // Ripples use the pressed colour, so the existing "pressed colour" hotkey and

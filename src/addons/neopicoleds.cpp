@@ -980,6 +980,12 @@ GamepadHotkey NeoPicoLEDAddon::animationHotkeys(Gamepad *gamepad)
             action = HOTKEY_LEDS_FADETIME_UP;
             gamepad->state.buttons &= ~(GAMEPAD_MASK_R3 | GAMEPAD_MASK_S1 | GAMEPAD_MASK_S2);
         }
+        else if (gamepad->pressedA1())
+        {
+            // Select + Start + Home: cycle afterglow / ripple / dark styles
+            as.NextPressStyle();
+            gamepad->state.buttons &= ~(GAMEPAD_MASK_A1 | GAMEPAD_MASK_S1 | GAMEPAD_MASK_S2);
+        }
     }
     return action;
 }

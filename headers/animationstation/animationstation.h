@@ -40,6 +40,13 @@ public:
     void SetRippleLayout(const std::map<uint8_t, RipplePoint> &pinPositions,
                          const std::map<uint32_t, uint8_t> &maskToPin);
     void HandlePressedPins(uint32_t pressedPins);
+
+    // LED press styles, cycled with Select + Start + Home.
+    // bit 0: ripple instead of afterglow, bit 1: LEDs off when not pressed.
+    static const uint32_t PRESS_STYLE_COUNT = 4;
+    static bool StyleUsesRipple();
+    static bool StyleIsDark();
+    void NextPressStyle();
     void ConfigureBrightness(uint8_t max, uint8_t steps);
     float GetBrightnessX();
     float GetLinkageModeOfBrightnessX();

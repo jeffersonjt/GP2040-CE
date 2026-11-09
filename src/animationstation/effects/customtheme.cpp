@@ -1,5 +1,6 @@
 #include "customtheme.h"
 #include "storagemanager.h"
+#include "animationstation.h"
 
 CustomTheme::CustomTheme(PixelMatrix &matrix) : Animation(matrix) {
   AnimationOptions & animationOptions = Storage::getInstance().getAnimationOptions();
@@ -30,6 +31,9 @@ bool CustomTheme::Animate(RGB (&frame)[100]) {
   UpdateTime();
   UpdatePresses(frame);
 
+  // Dark styles: buttons rest at off instead of their theme colour.
+  const bool dark = AnimationStation::StyleIsDark();
+
   for (size_t r = 0; r != matrix->pixels.size(); r++) {
     for (size_t c = 0; c != matrix->pixels[r].size(); c++) {
       if (matrix->pixels[r][c].index == NO_PIXEL.index)
@@ -42,7 +46,7 @@ bool CustomTheme::Animate(RGB (&frame)[100]) {
       if (itr != theme.end()) {
         for (size_t p = 0; p != matrix->pixels[r][c].positions.size(); p++) {
           // Interpolate from hitColor (color the button was assigned when pressed) back to the theme color
-          frame[matrix->pixels[r][c].positions[p]] = BlendColor(hitColor[matrix->pixels[r][c].index], itr->second, times[matrix->pixels[r][c].index]);
+          frame[matrix->pixels[r][c].positions[p]] = BlendColor(hitColor[matrix->pixels[r][c].index], dark ? ColorBlack : itr->second, times[matrix->pixels[r][c].index]);
         }
       } else {
         for (size_t p = 0; p != matrix->pixels[r][c].positions.size(); p++) {
