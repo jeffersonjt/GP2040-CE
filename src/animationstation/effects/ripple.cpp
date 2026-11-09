@@ -22,6 +22,10 @@ void Ripple::UpdatePressed(uint32_t pressedPins, RGB color) {
   if (newPresses == 0)
     return;
 
+  // A new tap replaces the ripples already on the stick. Buttons pressed in
+  // the same frame (e.g. a throw) still each start their own ripple below.
+  waves.clear();
+
   for (auto &entry : pinPositions) {
     if (!(newPresses & (1UL << entry.first)))
       continue;
