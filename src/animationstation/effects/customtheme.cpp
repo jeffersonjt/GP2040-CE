@@ -36,6 +36,17 @@ bool CustomTheme::Animate(RGB (&frame)[100]) {
   UpdateTime();
   UpdatePresses(frame);
 
+  // Start the fade from the button's full theme colour. The stock code starts
+  // from whatever the LED showed last frame, which on a quick tap is still the
+  // resting colour, so short taps barely showed any afterglow.
+  for (const Pixel &pressedPixel : pixels) {
+    if (pressedPixel.index == NO_PIXEL.index)
+      continue;
+    auto own = theme.find(pressedPixel.mask);
+    if (own != theme.end())
+      hitColor[pressedPixel.index] = own->second;
+  }
+
   // Dark styles: buttons rest at off instead of their theme colour.
   const bool dark = AnimationStation::StyleIsDark();
 

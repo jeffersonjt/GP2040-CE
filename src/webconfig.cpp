@@ -1047,9 +1047,12 @@ std::string setCustomTheme()
     options.customThemeA1Pressed	= readDocDefaultToZero("A1", "d");
     options.customThemeA2Pressed	= readDocDefaultToZero("A2", "d");
 
-    uint32_t pressCooldown = 0;
-    readDoc(pressCooldown, doc, "buttonPressColorCooldownTimeInMs");
-    options.buttonPressColorCooldownTimeInMs = pressCooldown;
+    // The web page sends this field in a shape that doesn't parse as a number,
+    // which used to reset the fade to 0 on every theme save. Only accept a
+    // real number; otherwise keep the current fade time.
+    if (doc["buttonPressColorCooldownTimeInMs"].is<uint32_t>()) {
+        options.buttonPressColorCooldownTimeInMs = doc["buttonPressColorCooldownTimeInMs"].as<uint32_t>();
+    }
 
     EventManager::getInstance().triggerEvent(new GPStorageSaveEvent(true));
     return serialize_json(doc);
