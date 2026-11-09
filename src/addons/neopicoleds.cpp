@@ -229,7 +229,10 @@ static std::map<uint32_t, uint8_t> ledButtonPins()
 		{ GAMEPAD_MASK_B4, 11 }, { GAMEPAD_MASK_R1, 12 }, { GAMEPAD_MASK_L1, 13 },
 		{ GAMEPAD_MASK_R2, 8 },  { GAMEPAD_MASK_L2, 9 },
 		{ GAMEPAD_MASK_L3, 18 }, { GAMEPAD_MASK_R3, 19 },
-		{ GAMEPAD_MASK_A1, 20 },
+		// The LED in the "A1" slot sits under the top Up button (checked on the
+		// stick: it lit under the top Up when Home was pressed), so drive it
+		// from the top Up pin rather than from Home.
+		{ GAMEPAD_MASK_A1, 22 },
 	};
 }
 

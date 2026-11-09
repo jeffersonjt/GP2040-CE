@@ -50,9 +50,9 @@ private:
   static const size_t MAX_WAVES = 8;
 
   // Distances are in "button widths": neighbouring buttons are about 1.0 apart.
-  static constexpr float SPEED_PER_MS = 0.016f;  // ring grows ~1 button every 60ms
+  static constexpr float SPEED_PER_MS = 0.010f;  // ring grows ~1 button every 100ms
   static constexpr float RING_WIDTH = 1.1f;      // how thick the ring is
-  static constexpr float LIFETIME_MS = 650.0f;   // ring fades out completely by then
+  static constexpr float LIFETIME_MS = 1000.0f;  // ring fades out completely by then
 
   std::map<uint8_t, RipplePoint> pinPositions;
   std::map<uint32_t, uint8_t> maskToPin;
